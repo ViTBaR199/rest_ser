@@ -12,7 +12,7 @@ import (
 type FinanceRepositories interface {
 	CreateFinance(ctx context.Context, finance models.Finance) error
 	DeleteFinance(ctx context.Context, id_to_del int) error
-	FetchFinance(ctx context.Context, start, end, month int) ([][]string, error)
+	FetchFinance(ctx context.Context, start, end, month int) ([]models.Finance, error)
 }
 
 type financeRepositories struct {
@@ -33,8 +33,8 @@ func (r *financeRepositories) DeleteFinance(ctx context.Context, id_to_del int) 
 	return err
 }
 
-func (r *financeRepositories) FetchFinance(ctx context.Context, start, end, month int) ([][]string, error) {
-	var result [][]string
+func (r *financeRepositories) FetchFinance(ctx context.Context, start, end, month int) ([]models.Finance, error) {
+	var result []models.Finance
 
 	rows, err := r.db.QueryContext(ctx, "SELECT * FROM fetch_finance($1, $2, $3)", start, end, month)
 	if err != nil {
@@ -43,15 +43,12 @@ func (r *financeRepositories) FetchFinance(ctx context.Context, start, end, mont
 	defer rows.Close()
 
 	for rows.Next() {
-		var id, price, folder_id int
-		var currancy string
-		var date string
-		if err := rows.Scan(&id, &price, &date, &currancy, &folder_id); err != nil {
+		var f models.Finance
+		if err := rows.Scan(&f.Id, &f.Price, &f.Date, &f.Currency, &f.Folder_id); err != nil {
 			return nil, fmt.Errorf("scanning row: %v", err)
 		}
 
-		rowData := []string{fmt.Sprintf("%d", id), fmt.Sprintf("%d", price), date, currancy, fmt.Sprintf("%d", folder_id)}
-		result = append(result, rowData)
+		result = append(result, f)
 	}
 
 	if err := rows.Err(); err != nil {

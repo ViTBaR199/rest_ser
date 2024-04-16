@@ -38,6 +38,6 @@ func (s *TaskServices) DeleteTask(id_to_del int) error {
 	return s.repo.DeleteTask(context.Background(), id_to_del)
 }
 
-func (s *TaskServices) FetchTask(start, end int) ([][]string, error) {
+func (s *TaskServices) FetchTask(start, end int) ([]models.Task, error) {
 	return s.repo.FetchTask(context.Background(), start, end)
 }

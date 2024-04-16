@@ -12,7 +12,7 @@ import (
 type NoteRepositories interface {
 	CreateNote(ctx context.Context, note models.Note) error
 	DeleteNote(ctx context.Context, id_to_del int) error
-	FetchNote(ctx context.Context, start, end int) ([][]string, error)
+	FetchNote(ctx context.Context, start, end int) ([]models.Note, error)
 }
 
 type noteRepositories struct {
@@ -33,8 +33,8 @@ func (r *noteRepositories) DeleteNote(ctx context.Context, id_to_del int) error 
 	return err
 }
 
-func (r *noteRepositories) FetchNote(ctx context.Context, start, end int) ([][]string, error) {
-	var result [][]string
+func (r *noteRepositories) FetchNote(ctx context.Context, start, end int) ([]models.Note, error) {
+	var result []models.Note
 
 	rows, err := r.db.QueryContext(ctx, "SELECT * FROM fetch_notes($1, $2)", start, end)
 	if err != nil {
@@ -43,14 +43,12 @@ func (r *noteRepositories) FetchNote(ctx context.Context, start, end int) ([][]s
 	defer rows.Close()
 
 	for rows.Next() {
-		var id, folder_id int
-		var title, content string
-		if err := rows.Scan(&id, &title, &content, &folder_id); err != nil {
+		var n models.Note
+		if err := rows.Scan(&n.Id, &n.Title, &n.Content, &n.Folder_id); err != nil {
 			return nil, fmt.Errorf("scanning row: %v", err)
 		}
 
-		rowData := []string{fmt.Sprintf("%d", id), title, content, fmt.Sprintf("%d", folder_id)}
-		result = append(result, rowData)
+		result = append(result, n)
 	}
 
 	if err := rows.Err(); err != nil {

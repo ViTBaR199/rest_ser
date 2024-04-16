@@ -4,6 +4,7 @@ import (
 	"myapp/internal/models"
 	"myapp/internal/services"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,15 +33,19 @@ func (h *FinanceHandler) CreateFinance(c *gin.Context) {
 }
 
 func (h *FinanceHandler) DeleteFinance(c *gin.Context) {
-	var financeDetails struct {
-		Id int `json:"id"`
-	}
-	if err := c.ShouldBindJSON(&financeDetails); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	ToDel := c.Query("to_del")
+	if ToDel == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no folder id provided"})
 		return
 	}
 
-	if err := h.FinanceService.DeleteFinance(financeDetails.Id); err != nil {
+	financeID, err := strconv.Atoi(ToDel) // Преобразование строки в int
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder id format"})
+		return
+	}
+
+	if err := h.FinanceService.DeleteFinance(financeID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -49,21 +54,27 @@ func (h *FinanceHandler) DeleteFinance(c *gin.Context) {
 }
 
 func (h *FinanceHandler) FetchFinance(c *gin.Context) {
-	var financeDetails struct {
-		Start int `json:"start"`
-		End   int `json:"end"`
-		Month int `json:"month"`
-	}
-	if err := c.ShouldBindJSON(&financeDetails); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	start := c.Query("start")
+	end := c.Query("end")
+	month := c.Query("month")
+	if start == "" || end == "" || month == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "both start, end and month parameters are required"})
 		return
 	}
 
-	rows, err := h.FinanceService.FetchFinance(financeDetails.Start, financeDetails.End, financeDetails.Month)
+	startINT, err := strconv.Atoi(start)
+	endINT, err1 := strconv.Atoi(end)
+	monthINT, err2 := strconv.Atoi(month)
+	if err != nil || err1 != nil || err2 != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder id format"})
+		return
+	}
+
+	rows, err := h.FinanceService.FetchFinance(startINT, endINT, monthINT)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": rows})
+	c.JSON(http.StatusOK, rows)
 }

@@ -4,6 +4,7 @@ import (
 	"myapp/internal/models"
 	"myapp/internal/services"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,15 +37,19 @@ func (h *FolderHandler) CreateFolder(c *gin.Context) {
 }
 
 func (h *FolderHandler) DeleteFolder(c *gin.Context) {
-	var folderDetails struct {
-		Id int `json:"id"`
-	}
-	if err := c.ShouldBindJSON(&folderDetails); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	ToDel := c.Query("to_del")
+	if ToDel == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no folder id provided"})
 		return
 	}
 
-	if err := h.FolderService.DeleteFolder(folderDetails.Id); err != nil {
+	folderID, err := strconv.Atoi(ToDel) // Преобразование строки в int
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder id format"})
+		return
+	}
+
+	if err := h.FolderService.DeleteFolder(folderID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -53,22 +58,19 @@ func (h *FolderHandler) DeleteFolder(c *gin.Context) {
 }
 
 func (h *FolderHandler) FetchFolder(c *gin.Context) {
-	var folderDetails struct {
-		Start int `json:"start"`
-		End   int `json:"end"`
-	}
-	if err := c.ShouldBindJSON(&folderDetails); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	folderType := c.Query("folder_type")
+	if folderType == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no folder type provided"})
 		return
 	}
 
-	rows, err := h.FolderService.FetchFolder(folderDetails.Start, folderDetails.End)
+	rows, err := h.FolderService.FetchFolder(folderType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": rows})
+	c.JSON(http.StatusOK, rows)
 }
 
 func (h *FolderHandler) UpdateFolder(c *gin.Context) {

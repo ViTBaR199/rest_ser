@@ -39,8 +39,8 @@ func (s *FolderService) DeleteFolder(id_to_del int) error {
 	return s.repo.DeleteFolder(context.Background(), id_to_del)
 }
 
-func (s *FolderService) FetchFolder(start, end int) ([][]string, error) {
-	return s.repo.FetchFolder(context.Background(), start, end)
+func (s *FolderService) FetchFolder(folder_type string) ([]models.Folder, error) {
+	return s.repo.FetchFolder(context.Background(), folder_type)
 }
 
 func (s *FolderService) UpdateFolder(ctx context.Context, folder models.Folder) error {

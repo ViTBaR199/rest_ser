@@ -4,6 +4,7 @@ import (
 	"myapp/internal/models"
 	"myapp/internal/services"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,15 +32,19 @@ func (h *NoteHandlers) CreateNote(c *gin.Context) {
 }
 
 func (h *NoteHandlers) DeleteNote(c *gin.Context) {
-	var noteDetails struct {
-		Id int `json:"id"`
-	}
-	if err := c.ShouldBindJSON(&noteDetails); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	ToDel := c.Query("to_del")
+	if ToDel == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no folder id provided"})
 		return
 	}
 
-	if err := h.NoteService.DeleteNote(noteDetails.Id); err != nil {
+	noteID, err := strconv.Atoi(ToDel) // Преобразование строки в int
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder id format"})
+		return
+	}
+
+	if err := h.NoteService.DeleteNote(noteID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -48,20 +53,25 @@ func (h *NoteHandlers) DeleteNote(c *gin.Context) {
 }
 
 func (h *NoteHandlers) FetchNote(c *gin.Context) {
-	var noteDetails struct {
-		Start int `json:"start"`
-		End   int `json:"end"`
-	}
-	if err := c.ShouldBindJSON(&noteDetails); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	start := c.Query("start")
+	end := c.Query("end")
+	if start == "" || end == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "both start and end parameters are required"})
 		return
 	}
 
-	rows, err := h.NoteService.FetchNote(noteDetails.Start, noteDetails.End)
+	startINT, err := strconv.Atoi(start)
+	endINT, err1 := strconv.Atoi(end)
+	if err != nil || err1 != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder id format"})
+		return
+	}
+
+	rows, err := h.NoteService.FetchNote(startINT, endINT)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": rows})
+	c.JSON(http.StatusOK, rows)
 }
