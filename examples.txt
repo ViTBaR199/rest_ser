@@ -1,0 +1,85 @@
+###
+curl -X POST http://localhost:8081/users \
+     -H 'Content-Type: application/json' \
+     -d '{"login": "testNewVAl", "email": "Test.Apperscale@example.com", "password": "newEncPassword"}'
+
+###
+curl -X GET  http://localhost:8081/auth \
+     -H 'Content-Type: application/json' \
+     -d '{"login":"testNewVAl","password":"newEncPassword"}'
+
+###
+curl -X POST http://localhost:8081/users -H 'Content-Type: application/json' -d '{"login": "testNewVAl", "email": "Test.Apperscale@example.com", "password": "newEncPassword"}'
+
+###
+curl -X GET http://localhost:8081/
+
+###
+curl -X POST http://localhost:8081/folder/create \
+     -H 'Content-Type: application/json' \
+     -d '{"name":"testoncode","type":"govno","image":"govno"}'
+
+###
+curl -X DELETE http://localhost:8081/folder/delete \
+     -H 'Content-Type: application/json' \
+     -d '{"id":10}'
+
+###
+curl -X GET http://localhost:8081/folder/fetch \
+     -H 'Content-Type: application/json' \
+     -d '{"start":8,"end":10}'
+
+###
+curl -X PUT http://localhost:8081/folder/update \
+     -H 'Content-Type: application/json' \
+     -d '{"id": 2, "name": "Новое имя папки", "type": "Новый тип", "image": "новый_путь_к_изображению"}'
+
+//-------------------------------------------------------------
+###
+curl -X POST http://localhost:8081/note/create \
+     -H 'Content-Type: application/json' \
+     -d '{"title":"testoncode","content":"govno for delete","folder_id":6}'
+
+###
+curl -X DELETE http://localhost:8081/note/delete \
+     -H 'Content-Type: application/json' \
+     -d '{"id":9}'
+
+###
+curl -X GET http://localhost:8081/note/fetch \
+     -H 'Content-Type: application/json' \
+     -d '{"start":3,"end":7}'
+
+//-------------------------------------------------------------
+###
+curl -X POST http://localhost:8081/finance/create \
+     -H 'Content-Type: application/json' \
+     -d '{"price":100,"currency":"USD","folder_id":3,"date":"2024-03-27T00:00:00Z"}'
+
+
+###
+curl -X DELETE http://localhost:8081/finance/delete \
+     -H 'Content-Type: application/json' \
+     -d '{"id":13}'
+
+###
+curl -X GET http://localhost:8081/finance/fetch \
+     -H 'Content-Type: application/json' \
+     -d '{"start":1,"end":7, "month":3}'
+
+//-------------------------------------------------------------
+###
+curl -X POST http://localhost:8081/task/create \
+     -H 'Content-Type: application/json' \
+     -d '{"text":"new text1","is_completed":true,"task_id":0,"folder_id":3}'
+
+
+###
+curl -X DELETE http://localhost:8081/task/delete \
+     -H 'Content-Type: application/json' \
+     -d '{"id":13}'
+
+###
+curl -X GET http://localhost:8081/task/fetch \
+     -H 'Content-Type: application/json' \
+     -d '{"start":1,"end":11}'
