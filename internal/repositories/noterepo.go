@@ -12,7 +12,7 @@ import (
 type NoteRepositories interface {
 	CreateNote(ctx context.Context, note models.Note) error
 	DeleteNote(ctx context.Context, id_to_del int) error
-	FetchNote(ctx context.Context, start, end int) ([]models.Note, error)
+	FetchNote(ctx context.Context, start, end int, folder_id ...int) ([]models.Note, error)
 }
 
 type noteRepositories struct {
@@ -33,10 +33,17 @@ func (r *noteRepositories) DeleteNote(ctx context.Context, id_to_del int) error 
 	return err
 }
 
-func (r *noteRepositories) FetchNote(ctx context.Context, start, end int) ([]models.Note, error) {
+func (r *noteRepositories) FetchNote(ctx context.Context, start, end int, folder_id ...int) ([]models.Note, error) {
 	var result []models.Note
+	var rows *sql.Rows
+	var err error
 
-	rows, err := r.db.QueryContext(ctx, "SELECT * FROM fetch_notes($1, $2)", start, end)
+	if len(folder_id) > 0 {
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_notes($1, $2, $3)", start, end, folder_id[0])
+	} else {
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_notes($1, $2)", start, end)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("querying fetch_notes: %v", err)
 	}
@@ -44,7 +51,7 @@ func (r *noteRepositories) FetchNote(ctx context.Context, start, end int) ([]mod
 
 	for rows.Next() {
 		var n models.Note
-		if err := rows.Scan(&n.Id, &n.Title, &n.Content, &n.Folder_id); err != nil {
+		if err := rows.Scan(&n.Id, &n.Title, &n.Content, &n.Folder_id, &n.Folder_name); err != nil {
 			return nil, fmt.Errorf("scanning row: %v", err)
 		}
 

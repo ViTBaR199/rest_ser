@@ -40,7 +40,7 @@ curl -X POST http://localhost:8081/note/create \
 curl -X DELETE http://localhost:8081/note/delete?to_del=2
 
 ###
-curl -X GET http://localhost:8081/note/fetch?start=1&end=7
+curl -X GET http://localhost:8081/note/fetch?start=1&end=7&folder_id=2
 
 //-------------------------------------------------------------
 ###

@@ -12,7 +12,7 @@ import (
 type TaskRepositories interface {
 	CreateTask(ctx context.Context, task models.Task) error
 	DeleteTask(ctx context.Context, id_to_del int) error
-	FetchTask(ctx context.Context, start, end int) ([]models.Task, error)
+	FetchTask(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error)
 }
 
 type taskRepositories struct {
@@ -39,10 +39,20 @@ func (r *taskRepositories) DeleteTask(ctx context.Context, id_to_del int) error 
 	return err
 }
 
-func (r *taskRepositories) FetchTask(ctx context.Context, start, end int) ([]models.Task, error) {
-	var result []models.Task
+func (r *taskRepositories) FetchTask(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error) {
+	taskMap := make(map[int]*models.Task)
+	allTasks := []models.Task{} // Список для задач без task_id
 
-	rows, err := r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1, $2)", start, end)
+	var rows *sql.Rows
+	var err error
+
+	// Выбор запроса в зависимости от наличия folder_id
+	if len(folder_id) > 0 {
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1, $2, $3)", start, end, folder_id[0])
+	} else {
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1, $2)", start, end)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("querying fetch_task: %v", err)
 	}
@@ -59,15 +69,31 @@ func (r *taskRepositories) FetchTask(ctx context.Context, start, end int) ([]mod
 		if task_id.Valid {
 			temptask_id := int(task_id.Int64)
 			t.Task_id = &temptask_id
-		} else {
-			t.Task_id = nil
 		}
 
-		result = append(result, t)
+		taskMap[t.Id] = &t
+		allTasks = append(allTasks, t)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("iterating rows: %v", err)
+	}
+
+	// После создания всех задач, организуем подзадачи
+	for _, task := range allTasks {
+		if task.Task_id != nil && *task.Task_id != task.Id {
+			if parent, exists := taskMap[*task.Task_id]; exists {
+				parent.Subtasks = append(parent.Subtasks, task)
+			}
+		}
+	}
+
+	// Формирование конечного списка результатов, добавляем только родительские задачи
+	var result []models.Task
+	for _, task := range taskMap {
+		if task.Task_id == nil { // Добавляем только корневые задачи
+			result = append(result, *task)
+		}
 	}
 
 	return result, nil

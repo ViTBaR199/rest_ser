@@ -54,19 +54,35 @@ func (h *TaskHandler) DeleteTask(c *gin.Context) {
 func (h *TaskHandler) FetchTask(c *gin.Context) {
 	start := c.Query("start")
 	end := c.Query("end")
+	folder_id := c.Query("folder_id")
 	if start == "" || end == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "both start and end parameters are required"})
 		return
 	}
 
 	startINT, err := strconv.Atoi(start)
-	endINT, err1 := strconv.Atoi(end)
-	if err != nil || err1 != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder id format"})
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start format"})
 		return
 	}
 
-	rows, err := h.TaskService.FetchTask(startINT, endINT)
+	endINT, err := strconv.Atoi(end)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end format"})
+		return
+	}
+
+	var folderINTs []int
+	if folder_id != "" {
+		folderINT, err := strconv.Atoi(folder_id)
+		if err != nil {
+
+		}
+		folderINTs = append(folderINTs, folderINT)
+	}
+
+	rows, err := h.TaskService.FetchTask(startINT, endINT, folderINTs...)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

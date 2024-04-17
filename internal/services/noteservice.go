@@ -33,6 +33,6 @@ func (s *NoteService) DeleteNote(id_to_del int) error {
 	return s.repo.DeleteNote(context.Background(), id_to_del)
 }
 
-func (s *NoteService) FetchNote(start, end int) ([]models.Note, error) {
-	return s.repo.FetchNote(context.Background(), start, end)
+func (s *NoteService) FetchNote(start, end int, folder_id ...int) ([]models.Note, error) {
+	return s.repo.FetchNote(context.Background(), start, end, folder_id...)
 }
