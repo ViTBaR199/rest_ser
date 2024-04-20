@@ -58,15 +58,47 @@ func (h *FolderHandler) DeleteFolder(c *gin.Context) {
 }
 
 func (h *FolderHandler) FetchFolder(c *gin.Context) {
+	start := c.Query("start")
+	end := c.Query("end")
 	folderType := c.Query("folder_type")
+	userId := c.Query("user")
 	if folderType == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "no folder type provided"})
 		return
 	}
 
-	rows, err := h.FolderService.FetchFolder(folderType)
+	if start == "" || end == "" || userId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "both start and end parameters are required"})
+		return
+	}
+
+	startINT, err := strconv.Atoi(start)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start format"})
+		return
+	}
+
+	endINT, err := strconv.Atoi(end)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end format"})
+		return
+	}
+
+	userINT, err := strconv.Atoi(userId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id format"})
+		return
+	}
+
+	rows, err := h.FolderService.FetchFolder(startINT, endINT, userINT, folderType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if rows == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no information was found about such a user or category"})
 		return
 	}
 

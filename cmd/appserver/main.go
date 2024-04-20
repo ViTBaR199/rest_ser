@@ -79,6 +79,12 @@ func main() {
 
 	router.GET("/task/fetch", taskHandler.FetchTask)
 
+	router.GET("/task/count", taskHandler.CountTask)
+
+	router.GET("/task/count/favourites", taskHandler.CountTaskFavourites)
+
+	router.GET("/task/fetch/favourites", taskHandler.FetchTaskFavourites)
+
 	// Запуск сервера
 	if err := router.Run(":8081"); err != nil {
 		log.Fatal("Failed to start server: ", err)

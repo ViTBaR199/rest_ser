@@ -12,7 +12,7 @@ import (
 type FolderRepositories interface {
 	CreateFolder(ctx context.Context, folder models.Folder) error
 	DeleteFolder(ctx context.Context, id_to_del int) error
-	FetchFolder(ctx context.Context, folder_type string) ([]models.Folder, error)
+	FetchFolder(ctx context.Context, start, end int, id_user int, type_folder string) ([]models.Folder, error)
 	UpdateFolder(ctx context.Context, folder models.Folder) error
 }
 
@@ -25,7 +25,7 @@ func NewFolderRepositories(db *sql.DB) FolderRepositories {
 }
 
 func (r *folderRepositories) CreateFolder(ctx context.Context, folder models.Folder) error {
-	_, err := r.db.ExecContext(ctx, "SELECT create_new_folder($1, $2, $3, $4)", folder.Name, folder.Type, folder.Image, folder.Color)
+	_, err := r.db.ExecContext(ctx, "SELECT create_new_folder($1, $2, $3, $4, $5)", folder.Name, folder.Type, folder.Image, folder.Color, folder.User_id)
 	return err
 }
 
@@ -34,11 +34,19 @@ func (r *folderRepositories) DeleteFolder(ctx context.Context, id_to_del int) er
 	return err
 }
 
-func (r *folderRepositories) FetchFolder(ctx context.Context, folder_type string) ([]models.Folder, error) {
+func (r *folderRepositories) FetchFolder(ctx context.Context, start, end int, id_user int, type_folder string) ([]models.Folder, error) {
 	var folders []models.Folder
-	rows, err := r.db.QueryContext(ctx, "SELECT * FROM fetch_folders($1)", folder_type)
+	var rows *sql.Rows
+	var err error
+
+	if len(type_folder) > 0 {
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_folders($1, $2, $3, $4)", start, end, type_folder, id_user)
+	} else {
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_folders($1, $2, $3)", start, end, id_user)
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("querying fetch_folders: %v", err)
+		return nil, fmt.Errorf("querying fetch_task: %v", err)
 	}
 	defer rows.Close()
 

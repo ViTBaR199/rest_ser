@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"myapp/internal/models"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -44,10 +45,12 @@ func (r *financeRepositories) FetchFinance(ctx context.Context, start, end, mont
 
 	for rows.Next() {
 		var f models.Finance
-		if err := rows.Scan(&f.Id, &f.Price, &f.Date, &f.Currency, &f.Folder_id); err != nil {
+		var date_d time.Time
+		if err := rows.Scan(&f.Id, &f.Price, &date_d, &f.Currency, &f.Folder_id); err != nil {
 			return nil, fmt.Errorf("scanning row: %v", err)
 		}
 
+		f.Date = time.Date(date_d.Year(), date_d.Month(), date_d.Day(), 0, 0, 0, 0, date_d.Location()).Format("2006.01.02")
 		result = append(result, f)
 	}
 

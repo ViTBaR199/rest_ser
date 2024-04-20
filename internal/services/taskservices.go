@@ -41,3 +41,15 @@ func (s *TaskServices) DeleteTask(id_to_del int) error {
 func (s *TaskServices) FetchTask(start, end int, folder_id ...int) ([]models.Task, error) {
 	return s.repo.FetchTask(context.Background(), start, end, folder_id...)
 }
+
+func (s *TaskServices) CountTask() (int, error) {
+	return s.repo.CountTask(context.Background())
+}
+
+func (s *TaskServices) CountTaskFavourites() (int, error) {
+	return s.repo.CountTaskFavourites(context.Background())
+}
+
+func (s *TaskServices) FetchTaskFavourites(start, end int, folder_id ...int) ([]models.Task, error) {
+	return s.repo.FetchTaskFavourites(context.Background(), start, end, folder_id...)
+}

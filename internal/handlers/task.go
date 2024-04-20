@@ -90,3 +90,61 @@ func (h *TaskHandler) FetchTask(c *gin.Context) {
 
 	c.JSON(http.StatusOK, rows)
 }
+
+func (h *TaskHandler) CountTask(c *gin.Context) {
+	rows, err := h.TaskService.CountTask()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, rows)
+}
+
+func (h *TaskHandler) CountTaskFavourites(c *gin.Context) {
+	rows, err := h.TaskService.CountTaskFavourites()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, rows)
+}
+
+func (h *TaskHandler) FetchTaskFavourites(c *gin.Context) {
+	start := c.Query("start")
+	end := c.Query("end")
+	folder_id := c.Query("folder_id")
+	if start == "" || end == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "both start and end parameters are required"})
+		return
+	}
+
+	startINT, err := strconv.Atoi(start)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start format"})
+		return
+	}
+
+	endINT, err := strconv.Atoi(end)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end format"})
+		return
+	}
+
+	var folderINTs []int
+	if folder_id != "" {
+		folderINT, err := strconv.Atoi(folder_id)
+		if err != nil {
+
+		}
+		folderINTs = append(folderINTs, folderINT)
+	}
+
+	rows, err := h.TaskService.FetchTask(startINT, endINT, folderINTs...)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
+}

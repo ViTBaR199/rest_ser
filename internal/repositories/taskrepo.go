@@ -13,6 +13,10 @@ type TaskRepositories interface {
 	CreateTask(ctx context.Context, task models.Task) error
 	DeleteTask(ctx context.Context, id_to_del int) error
 	FetchTask(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error)
+	//UpdateTask(ctx context.Context, task models.Task) error
+	CountTask(ctx context.Context) (int, error)
+	CountTaskFavourites(ctx context.Context) (int, error)
+	FetchTaskFavourites(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error)
 }
 
 type taskRepositories struct {
@@ -30,7 +34,8 @@ func (r *taskRepositories) CreateTask(ctx context.Context, task models.Task) err
 	} else {
 		taskID = sql.NullInt64{Int64: 0, Valid: false}
 	}
-	_, err := r.db.ExecContext(ctx, "SELECT create_new_task($1, $2, $3, $4, $5)", task.Text, task.Is_completed, taskID, task.Folder_id, task.Favourites)
+	_, err := r.db.ExecContext(ctx, "SELECT create_new_task($1, $2, $3, $4, $5, $6, $7)",
+		task.Text, task.Description, task.Is_completed, taskID, task.Folder_id, task.Favourites, task.Date)
 	return err
 }
 
@@ -61,8 +66,9 @@ func (r *taskRepositories) FetchTask(ctx context.Context, start, end int, folder
 	for rows.Next() {
 		var t models.Task
 		var task_id sql.NullInt64
+		var description sql.NullString
 
-		if err := rows.Scan(&t.Id, &t.Text, &t.Is_completed, &task_id, &t.Folder_id, &t.Favourites); err != nil {
+		if err := rows.Scan(&t.Id, &t.Text, &description, &t.Date, &t.Is_completed, &t.Favourites, &task_id, &t.Folder_id, &t.Folder_name); err != nil {
 			return nil, fmt.Errorf("scanning row: %v", err)
 		}
 
@@ -70,6 +76,123 @@ func (r *taskRepositories) FetchTask(ctx context.Context, start, end int, folder
 			temptask_id := int(task_id.Int64)
 			t.Task_id = &temptask_id
 		}
+
+		t.Description = description.String
+
+		taskMap[t.Id] = &t
+		allTasks = append(allTasks, t)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating rows: %v", err)
+	}
+
+	// После создания всех задач, организуем подзадачи
+	for _, task := range allTasks {
+		if task.Task_id != nil && *task.Task_id != task.Id {
+			if parent, exists := taskMap[*task.Task_id]; exists {
+				parent.Subtasks = append(parent.Subtasks, task)
+			}
+		}
+	}
+
+	// Формирование конечного списка результатов, добавляем только родительские задачи
+	var result []models.Task
+	for _, task := range taskMap {
+		if task.Task_id == nil { // Добавляем только корневые задачи
+			result = append(result, *task)
+		}
+	}
+
+	return result, nil
+}
+
+func (r *taskRepositories) CountTask(ctx context.Context) (int, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT * FROM count_task()")
+	if err != nil {
+		return 0, fmt.Errorf("querying count_task: %v", err)
+	}
+	defer rows.Close()
+
+	var count sql.NullInt64
+	if rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			return 0, fmt.Errorf("scanning row: %v", err)
+		}
+		if !count.Valid {
+			// Обрабатываем случай, когда получено NULL значение
+			return 0, fmt.Errorf("received NULL value for count")
+		}
+		return int(count.Int64), nil
+	} else {
+		// Обрабатываем случай, когда не возвращено ни одной строки
+		if err := rows.Err(); err != nil {
+			return 0, err
+		}
+		return 0, fmt.Errorf("no rows returned")
+	}
+}
+
+func (r *taskRepositories) CountTaskFavourites(ctx context.Context) (int, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT * FROM count_task_favourites()")
+	if err != nil {
+		return 0, fmt.Errorf("querying count_task_favourites: %v", err)
+	}
+	defer rows.Close()
+
+	var count sql.NullInt64
+	if rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			return 0, fmt.Errorf("scanning row: %v", err)
+		}
+		if !count.Valid {
+			// Обрабатываем случай, когда получено NULL значение
+			return 0, fmt.Errorf("received NULL value for count")
+		}
+		return int(count.Int64), nil
+	} else {
+		// Обрабатываем случай, когда не возвращено ни одной строки
+		if err := rows.Err(); err != nil {
+			return 0, err
+		}
+		return 0, fmt.Errorf("no rows returned")
+	}
+}
+
+func (r *taskRepositories) FetchTaskFavourites(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error) {
+	taskMap := make(map[int]*models.Task)
+	allTasks := []models.Task{} // Список для задач без task_id
+
+	var rows *sql.Rows
+	var err error
+
+	// Выбор запроса в зависимости от наличия folder_id
+	if len(folder_id) > 0 {
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task_favourites($1, $2, $3)", start, end, folder_id[0])
+	} else {
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task_favourites($1, $2)", start, end)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("querying fetch_task: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var t models.Task
+		var task_id sql.NullInt64
+		var description sql.NullString
+
+		if err := rows.Scan(&t.Id, &t.Text, &description, &t.Date, &t.Is_completed, &t.Favourites, &task_id, &t.Folder_id, &t.Folder_name); err != nil {
+			return nil, fmt.Errorf("scanning row: %v", err)
+		}
+
+		if task_id.Valid {
+			temptask_id := int(task_id.Int64)
+			t.Task_id = &temptask_id
+		}
+
+		t.Description = description.String
 
 		taskMap[t.Id] = &t
 		allTasks = append(allTasks, t)
