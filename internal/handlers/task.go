@@ -91,6 +91,21 @@ func (h *TaskHandler) FetchTask(c *gin.Context) {
 	c.JSON(http.StatusOK, rows)
 }
 
+func (h *TaskHandler) UpdateTask(c *gin.Context) {
+	var task models.Task
+	if err := c.ShouldBindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.TaskService.UpdateTask(c, task); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Task updated successfully"})
+}
+
 func (h *TaskHandler) CountTask(c *gin.Context) {
 	rows, err := h.TaskService.CountTask()
 	if err != nil {

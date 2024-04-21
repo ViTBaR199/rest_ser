@@ -28,6 +28,7 @@ func validateTaskData(task models.Task) error {
 
 func (s *TaskServices) CreateTask(ctx context.Context, task models.Task) error {
 	if err := validateTaskData(task); err != nil {
+		//-----------изменить возвращаемое значение--------------
 		return nil
 	}
 
@@ -40,6 +41,10 @@ func (s *TaskServices) DeleteTask(id_to_del int) error {
 
 func (s *TaskServices) FetchTask(start, end int, folder_id ...int) ([]models.Task, error) {
 	return s.repo.FetchTask(context.Background(), start, end, folder_id...)
+}
+
+func (s *TaskServices) UpdateTask(ctx context.Context, task models.Task) error {
+	return s.repo.UpdateTask(ctx, task)
 }
 
 func (s *TaskServices) CountTask() (int, error) {

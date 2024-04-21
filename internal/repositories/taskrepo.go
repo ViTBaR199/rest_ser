@@ -13,7 +13,7 @@ type TaskRepositories interface {
 	CreateTask(ctx context.Context, task models.Task) error
 	DeleteTask(ctx context.Context, id_to_del int) error
 	FetchTask(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error)
-	//UpdateTask(ctx context.Context, task models.Task) error
+	UpdateTask(ctx context.Context, task models.Task) error
 	CountTask(ctx context.Context) (int, error)
 	CountTaskFavourites(ctx context.Context) (int, error)
 	FetchTaskFavourites(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error)
@@ -28,13 +28,35 @@ func NewTaskRepositories(db *sql.DB) TaskRepositories {
 }
 
 func (r *taskRepositories) CreateTask(ctx context.Context, task models.Task) error {
+	var tasks []models.Task
+	var err error
+	tasks, err = r.FetchTask(ctx, 0, 0)
+
+	if err != nil {
+		return fmt.Errorf("an empty task list")
+	}
+
+	if len(tasks) == 0 {
+		return fmt.Errorf("no tasks available for checking")
+	}
+
+	for _, t := range tasks {
+		if task.Task_id != nil && task.Id == *t.Task_id {
+			err := fmt.Errorf("the parent element cannot be a child")
+			return err
+		} else if t.Task_id != nil && *task.Task_id == t.Id {
+			err := fmt.Errorf("an element cannot be a child of another child element")
+			return err
+		}
+	}
+
 	var taskID sql.NullInt64
 	if task.Task_id != nil {
 		taskID = sql.NullInt64{Int64: int64(*task.Task_id), Valid: true}
 	} else {
 		taskID = sql.NullInt64{Int64: 0, Valid: false}
 	}
-	_, err := r.db.ExecContext(ctx, "SELECT create_new_task($1, $2, $3, $4, $5, $6, $7)",
+	_, err = r.db.ExecContext(ctx, "SELECT create_new_task($1, $2, $3, $4, $5, $6, $7)",
 		task.Text, task.Description, task.Is_completed, taskID, task.Folder_id, task.Favourites, task.Date)
 	return err
 }
@@ -52,7 +74,9 @@ func (r *taskRepositories) FetchTask(ctx context.Context, start, end int, folder
 	var err error
 
 	// Выбор запроса в зависимости от наличия folder_id
-	if len(folder_id) > 0 {
+	if start == 0 && end == 0 {
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task()")
+	} else if len(folder_id) > 0 {
 		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1, $2, $3)", start, end, folder_id[0])
 	} else {
 		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1, $2)", start, end)
@@ -105,6 +129,41 @@ func (r *taskRepositories) FetchTask(ctx context.Context, start, end int, folder
 	}
 
 	return result, nil
+}
+
+func (r *taskRepositories) UpdateTask(ctx context.Context, task models.Task) error {
+	//проверить, есть ли у него родительский task
+	////тогда родителя можно заменить на другого (кроме id, который сам является дочерним)
+	//проверить, является ли он чьим-то родителем
+	////тогда он не может иметь родителя кроме null
+
+	tasks, err := r.FetchTask(ctx, 0, 0)
+
+	if err != nil {
+		return fmt.Errorf("an empty task list")
+	}
+
+	if len(tasks) == 0 {
+		return fmt.Errorf("no tasks available for checking")
+	}
+
+	for _, t := range tasks {
+		if task.Task_id != nil && task.Id == *t.Task_id {
+			err := fmt.Errorf("the parent element cannot be a child")
+			return err
+		} else if t.Task_id != nil && *task.Task_id == t.Id {
+			err := fmt.Errorf("an element cannot be a child of another child element")
+			return err
+		}
+	}
+
+	_, err = r.db.ExecContext(ctx, "SELECT update_task($1, $2, $3, $4, $5, $6, $7, $8)", task.Id, task.Text, task.Description, task.Date, task.Is_completed,
+		task.Favourites, task.Task_id, task.Folder_id)
+
+	if err != nil {
+		return fmt.Errorf("error updating task: %v", err)
+	}
+	return err
 }
 
 func (r *taskRepositories) CountTask(ctx context.Context) (int, error) {

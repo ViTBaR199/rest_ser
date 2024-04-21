@@ -79,6 +79,8 @@ func main() {
 
 	router.GET("/task/fetch", taskHandler.FetchTask)
 
+	router.PUT("/task/update", taskHandler.UpdateTask)
+
 	router.GET("/task/count", taskHandler.CountTask)
 
 	router.GET("/task/count/favourites", taskHandler.CountTaskFavourites)

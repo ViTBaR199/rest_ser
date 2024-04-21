@@ -76,6 +76,6 @@ func (r *folderRepositories) FetchFolder(ctx context.Context, start, end int, id
 }
 
 func (r *folderRepositories) UpdateFolder(ctx context.Context, folder models.Folder) error {
-	_, err := r.db.ExecContext(ctx, "SELECT update_folder($1, $2, $3, $4)", folder.ID, folder.Name, folder.Type, folder.Image)
+	_, err := r.db.ExecContext(ctx, "SELECT update_folder($1, $2, $3, $4, $5, $6)", folder.ID, folder.Name, folder.Type, folder.Image, folder.Color, folder.User_id)
 	return err
 }
