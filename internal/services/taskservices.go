@@ -29,7 +29,7 @@ func validateTaskData(task models.Task) error {
 func (s *TaskServices) CreateTask(ctx context.Context, task models.Task) error {
 	if err := validateTaskData(task); err != nil {
 		//-----------изменить возвращаемое значение--------------
-		return nil
+		return err
 	}
 
 	return s.repo.CreateTask(ctx, task)

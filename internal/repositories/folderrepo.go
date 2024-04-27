@@ -76,6 +76,22 @@ func (r *folderRepositories) FetchFolder(ctx context.Context, start, end int, id
 }
 
 func (r *folderRepositories) UpdateFolder(ctx context.Context, folder models.Folder) error {
-	_, err := r.db.ExecContext(ctx, "SELECT update_folder($1, $2, $3, $4, $5, $6)", folder.ID, folder.Name, folder.Type, folder.Image, folder.Color, folder.User_id)
-	return err
+	if folder.ID != nil && folder.Name != "" && folder.Type != "" &&
+		folder.Image != "" && folder.Color != nil && folder.User_id != nil {
+		_, err := r.db.ExecContext(ctx, "SELECT update_folder($1, $2, $3, $4, $5, $6)", folder.ID, folder.Name, folder.Type, folder.Image, folder.Color, folder.User_id)
+		return err
+	} else if folder.ID == nil {
+		return fmt.Errorf("the ID are set incorrectly")
+	} else if folder.Name == "" {
+		return fmt.Errorf("the NAME are set incorrectly")
+	} else if folder.Type == "" {
+		return fmt.Errorf("the TYPE are set incorrectly")
+	} else if folder.Image == "" {
+		return fmt.Errorf("the IMAGE are set incorrectly")
+	} else if folder.Color == nil {
+		return fmt.Errorf("the COLOR are set incorrectly")
+	} else if folder.User_id == nil {
+		return fmt.Errorf("the USER ID are set incorrectly")
+	}
+	return fmt.Errorf("the parameters are set incorrectly")
 }

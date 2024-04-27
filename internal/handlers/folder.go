@@ -62,10 +62,10 @@ func (h *FolderHandler) FetchFolder(c *gin.Context) {
 	end := c.Query("end")
 	folderType := c.Query("folder_type")
 	userId := c.Query("user")
-	if folderType == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no folder type provided"})
-		return
-	}
+	// if folderType == "" {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "no folder type provided"})
+	// 	return
+	// }
 
 	if start == "" || end == "" || userId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "both start and end parameters are required"})

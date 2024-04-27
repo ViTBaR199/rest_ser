@@ -26,6 +26,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 
 	if err := h.TaskService.CreateTask(c, task); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Task created successfully"})
@@ -155,7 +156,7 @@ func (h *TaskHandler) FetchTaskFavourites(c *gin.Context) {
 		folderINTs = append(folderINTs, folderINT)
 	}
 
-	rows, err := h.TaskService.FetchTask(startINT, endINT, folderINTs...)
+	rows, err := h.TaskService.FetchTaskFavourites(startINT, endINT, folderINTs...)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

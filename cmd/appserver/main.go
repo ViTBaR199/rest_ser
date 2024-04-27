@@ -85,7 +85,7 @@ func main() {
 
 	router.GET("/task/count/favourites", taskHandler.CountTaskFavourites)
 
-	router.GET("/task/fetch/favourites", taskHandler.FetchTaskFavourites)
+	router.GET("/task/fetch-favourites", taskHandler.FetchTaskFavourites)
 
 	// Запуск сервера
 	if err := router.Run(":8081"); err != nil {
