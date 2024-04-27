@@ -72,6 +72,10 @@ func main() {
 
 	router.GET("/finance/fetch", financeHandler.FetchFinance)
 
+	router.GET("/finance/fetch-income", financeHandler.FetchFinanceIncome)
+
+	router.GET("/finance/fetch-expense", financeHandler.FetchFinanceExpense)
+
 	//---------------------------------------------------------
 	router.POST("/task/create", taskHandler.CreateTask)
 
@@ -85,7 +89,7 @@ func main() {
 
 	router.GET("/task/count/favourites", taskHandler.CountTaskFavourites)
 
-	router.GET("/task/fetch-favourites", taskHandler.FetchTaskFavourites)
+	router.GET("/task/fetch-expense", taskHandler.FetchTaskFavourites)
 
 	// Запуск сервера
 	if err := router.Run(":8081"); err != nil {

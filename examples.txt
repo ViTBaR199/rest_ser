@@ -17,13 +17,13 @@ curl -X GET http://localhost:8081/
 ###
 curl -X POST http://localhost:8081/folder/create \
      -H 'Content-Type: application/json' \
-     -d '{"name":"testoncode","type":"govno","image":"govno","color":1,"user_id":1}'
+     -d '{"name":"testoncode2","type":"folder 2","image":"two","color":3,"user_id":2}'
 
 ###
 curl -X DELETE http://localhost:8081/folder/delete?to_del=11
 
 ###
-curl -X GET http://localhost:8081/folder/fetch?start=1&end=10&user=1
+curl -X GET http://localhost:8081/folder/fetch?start=1&end=10&user=2
 
 ###
 curl -X PUT http://localhost:8081/folder/update \
@@ -46,14 +46,20 @@ curl -X GET http://localhost:8081/note/fetch?start=1&end=7&folder_id=5
 ###
 curl -X POST http://localhost:8081/finance/create \
      -H 'Content-Type: application/json' \
-     -d '{"price":100,"currency":"USD","folder_id":3,"date":"2024-03-27T00:00:00Z"}'
+     -d '{"price":-100,"currency":"RUB","folder_id":2,"date":"2024-03-27T00:00:00Z"}'
 
 
 ###
 curl -X DELETE http://localhost:8081/finance/delete?to_del=4
 
 ###
-curl -X GET http://localhost:8081/finance/fetch?start=1&end=10&month=3
+curl -X GET http://localhost:8081/finance/fetch?user_id=1&start=1&end=10
+
+###
+curl -X GET http://localhost:8081/finance/fetch-income?user_id=1&start=1&end=10&yearMonth=2024-03
+
+###
+curl -X GET http://localhost:8081/finance/fetch-expect?user_id=1&start=1&end=10&yearMonth=2024-03
 
 //-------------------------------------------------------------
 ###

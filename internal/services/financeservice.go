@@ -40,6 +40,14 @@ func (s *FinanceService) DeleteFinance(id_to_del int) error {
 	return s.repo.DeleteFinance(context.Background(), id_to_del)
 }
 
-func (s *FinanceService) FetchFinance(start, end, month int) ([]models.Finance, error) {
-	return s.repo.FetchFinance(context.Background(), start, end, month)
+func (s *FinanceService) FetchFinance(user_id, start, end int) ([]models.Finance, error) {
+	return s.repo.FetchFinance(context.Background(), user_id, start, end)
+}
+
+func (s *FinanceService) FetchFinanceIncome(user_id, start, end int, yearMonth string) ([]models.Finance, error) {
+	return s.repo.FetchFinanceIncome(context.Background(), user_id, start, end, yearMonth)
+}
+
+func (s *FinanceService) FetchFinanceExpense(user_id, start, end int, yearMonth string) ([]models.Finance, error) {
+	return s.repo.FetchFinanceExpense(context.Background(), user_id, start, end, yearMonth)
 }

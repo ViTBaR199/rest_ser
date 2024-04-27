@@ -54,23 +54,77 @@ func (h *FinanceHandler) DeleteFinance(c *gin.Context) {
 }
 
 func (h *FinanceHandler) FetchFinance(c *gin.Context) {
+	user_id := c.Query("user_id")
 	start := c.Query("start")
 	end := c.Query("end")
-	month := c.Query("month")
-	if start == "" || end == "" || month == "" {
+	if start == "" || end == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "both start, end and month parameters are required"})
 		return
 	}
 
-	startINT, err := strconv.Atoi(start)
-	endINT, err1 := strconv.Atoi(end)
-	monthINT, err2 := strconv.Atoi(month)
+	userINT, err := strconv.Atoi(user_id)
+	startINT, err1 := strconv.Atoi(start)
+	endINT, err2 := strconv.Atoi(end)
 	if err != nil || err1 != nil || err2 != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder id format"})
 		return
 	}
 
-	rows, err := h.FinanceService.FetchFinance(startINT, endINT, monthINT)
+	rows, err := h.FinanceService.FetchFinance(userINT, startINT, endINT)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
+}
+
+func (h *FinanceHandler) FetchFinanceIncome(c *gin.Context) {
+	user_id := c.Query("user_id")
+	start := c.Query("start")
+	end := c.Query("end")
+	yearMonth := c.Query("yearMonth")
+	if start == "" || end == "" || yearMonth == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "both start, end and month parameters are required"})
+		return
+	}
+
+	userINT, err3 := strconv.Atoi(user_id)
+	startINT, err := strconv.Atoi(start)
+	endINT, err1 := strconv.Atoi(end)
+	if err != nil || err1 != nil || err3 != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder id format"})
+		return
+	}
+
+	rows, err := h.FinanceService.FetchFinanceIncome(userINT, startINT, endINT, yearMonth)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
+}
+
+func (h *FinanceHandler) FetchFinanceExpense(c *gin.Context) {
+	user_id := c.Query("user_id")
+	start := c.Query("start")
+	end := c.Query("end")
+	yearMonth := c.Query("yearMonth")
+	if start == "" || end == "" || yearMonth == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "both start, end and month parameters are required"})
+		return
+	}
+
+	userINT, err3 := strconv.Atoi(user_id)
+	startINT, err := strconv.Atoi(start)
+	endINT, err1 := strconv.Atoi(end)
+	if err != nil || err1 != nil || err3 != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid folder id format"})
+		return
+	}
+
+	rows, err := h.FinanceService.FetchFinanceExpense(userINT, startINT, endINT, yearMonth)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
