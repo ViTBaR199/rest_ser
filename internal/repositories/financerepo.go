@@ -11,11 +11,12 @@ import (
 )
 
 type FinanceRepositories interface {
-	CreateFinance(ctx context.Context, finance models.Finance) error
+	CreateFinance(ctx context.Context, finance models.Finance) (int, error)
 	DeleteFinance(ctx context.Context, id_to_del int) error
 	FetchFinance(ctx context.Context, start, end, month int) ([]models.Finance, error)
 	FetchFinanceIncome(ctx context.Context, user_id, start, end int, yearMonth string) ([]models.Finance, error)
 	FetchFinanceExpense(ctx context.Context, user_id, start, end int, yearMonth string) ([]models.Finance, error)
+	GetUserByFinance(financeID int) (int, error)
 }
 
 type financeRepositories struct {
@@ -26,9 +27,13 @@ func NewFinanceRepositories(db *sql.DB) FinanceRepositories {
 	return &financeRepositories{db: db}
 }
 
-func (r *financeRepositories) CreateFinance(ctx context.Context, finance models.Finance) error {
-	_, err := r.db.ExecContext(ctx, "SELECT create_new_finance($1, $2, $3, $4)", finance.Price, finance.Currency, finance.Folder_id, finance.Date)
-	return err
+func (r *financeRepositories) CreateFinance(ctx context.Context, finance models.Finance) (int, error) {
+	var newId int
+	err := r.db.QueryRowContext(ctx, "SELECT create_new_finance($1, $2, $3, $4)", finance.Price, finance.Currency, finance.Folder_id, finance.Date).Scan(&newId)
+	if err != nil {
+		return 0, err
+	}
+	return newId, nil
 }
 
 func (r *financeRepositories) DeleteFinance(ctx context.Context, id_to_del int) error {
@@ -115,4 +120,13 @@ func (r *financeRepositories) FetchFinanceExpense(ctx context.Context, user_id, 
 	}
 
 	return result, nil
+}
+
+func (r *financeRepositories) GetUserByFinance(financeID int) (int, error) {
+	var userId int
+	err := r.db.QueryRow("SELECT get_user_by_finance($1)", financeID).Scan(&userId)
+	if err != nil {
+		return 0, err
+	}
+	return userId, nil
 }

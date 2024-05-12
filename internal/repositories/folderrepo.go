@@ -14,6 +14,7 @@ type FolderRepositories interface {
 	DeleteFolder(ctx context.Context, id_to_del int) error
 	FetchFolder(ctx context.Context, start, end int, id_user int, type_folder string) ([]models.Folder, error)
 	UpdateFolder(ctx context.Context, folder models.Folder) error
+	GetUserByFolder(folderID int) (int, error)
 }
 
 type folderRepositories struct {
@@ -94,4 +95,13 @@ func (r *folderRepositories) UpdateFolder(ctx context.Context, folder models.Fol
 		return fmt.Errorf("the USER ID are set incorrectly")
 	}
 	return fmt.Errorf("the parameters are set incorrectly")
+}
+
+func (r *folderRepositories) GetUserByFolder(folderID int) (int, error) {
+	var userId int
+	err := r.db.QueryRow("SELECT get_user_by_folderID($1)", folderID).Scan(&userId)
+	if err != nil {
+		return 0, err
+	}
+	return userId, nil
 }

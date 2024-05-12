@@ -45,7 +45,7 @@ func (h *FinanceHandler) DeleteFinance(c *gin.Context) {
 		return
 	}
 
-	if err := h.FinanceService.DeleteFinance(financeID); err != nil {
+	if err := h.FinanceService.DeleteFinance(c, financeID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

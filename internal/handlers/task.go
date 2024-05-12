@@ -53,6 +53,7 @@ func (h *TaskHandler) DeleteTask(c *gin.Context) {
 }
 
 func (h *TaskHandler) FetchTask(c *gin.Context) {
+	user_id := c.Query("user_id")
 	start := c.Query("start")
 	end := c.Query("end")
 	folder_id := c.Query("folder_id")
@@ -61,8 +62,13 @@ func (h *TaskHandler) FetchTask(c *gin.Context) {
 		return
 	}
 
-	startINT, err := strconv.Atoi(start)
+	userINT, err := strconv.Atoi(user_id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id format"})
+		return
+	}
 
+	startINT, err := strconv.Atoi(start)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start format"})
 		return
@@ -83,7 +89,7 @@ func (h *TaskHandler) FetchTask(c *gin.Context) {
 		folderINTs = append(folderINTs, folderINT)
 	}
 
-	rows, err := h.TaskService.FetchTask(startINT, endINT, folderINTs...)
+	rows, err := h.TaskService.FetchTask(userINT, startINT, endINT, folderINTs...)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -108,7 +114,14 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 }
 
 func (h *TaskHandler) CountTask(c *gin.Context) {
-	rows, err := h.TaskService.CountTask()
+	user_id := c.Query("user_id")
+	userINT, err := strconv.Atoi(user_id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id format"})
+		return
+	}
+
+	rows, err := h.TaskService.CountTask(userINT)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -117,7 +130,14 @@ func (h *TaskHandler) CountTask(c *gin.Context) {
 }
 
 func (h *TaskHandler) CountTaskFavourites(c *gin.Context) {
-	rows, err := h.TaskService.CountTaskFavourites()
+	user_id := c.Query("user_id")
+	userINT, err := strconv.Atoi(user_id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id format"})
+		return
+	}
+
+	rows, err := h.TaskService.CountTaskFavourites(userINT)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -126,6 +146,7 @@ func (h *TaskHandler) CountTaskFavourites(c *gin.Context) {
 }
 
 func (h *TaskHandler) FetchTaskFavourites(c *gin.Context) {
+	user_id := c.Query("user_id")
 	start := c.Query("start")
 	end := c.Query("end")
 	folder_id := c.Query("folder_id")
@@ -134,8 +155,13 @@ func (h *TaskHandler) FetchTaskFavourites(c *gin.Context) {
 		return
 	}
 
-	startINT, err := strconv.Atoi(start)
+	userINT, err := strconv.Atoi(user_id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id format"})
+		return
+	}
 
+	startINT, err := strconv.Atoi(start)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start format"})
 		return
@@ -156,7 +182,7 @@ func (h *TaskHandler) FetchTaskFavourites(c *gin.Context) {
 		folderINTs = append(folderINTs, folderINT)
 	}
 
-	rows, err := h.TaskService.FetchTaskFavourites(startINT, endINT, folderINTs...)
+	rows, err := h.TaskService.FetchTaskFavourites(userINT, startINT, endINT, folderINTs...)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

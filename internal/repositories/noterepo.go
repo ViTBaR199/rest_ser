@@ -10,9 +10,11 @@ import (
 )
 
 type NoteRepositories interface {
-	CreateNote(ctx context.Context, note models.Note) error
+	CreateNote(ctx context.Context, note models.Note) (int, error)
 	DeleteNote(ctx context.Context, id_to_del int) error
-	FetchNote(ctx context.Context, start, end int, folder_id ...int) ([]models.Note, error)
+	FetchNote(ctx context.Context, user_id, start, end int, folder_id ...int) ([]models.Note, error)
+	UpdateNote(ctx context.Context, note models.Note) error
+	GetUserByFinance(noteID int) (int, error)
 }
 
 type noteRepositories struct {
@@ -23,25 +25,32 @@ func NewNoteRepositories(db *sql.DB) NoteRepositories {
 	return &noteRepositories{db: db}
 }
 
-func (r *noteRepositories) CreateNote(ctx context.Context, note models.Note) error {
-	_, err := r.db.ExecContext(ctx, "SELECT FROM create_new_note($1, $2, $3)", note.Title, note.Content, note.Folder_id)
-	return err
+func (r *noteRepositories) CreateNote(ctx context.Context, note models.Note) (int, error) {
+	var newId int
+	err := r.db.QueryRowContext(ctx, "SELECT FROM create_new_note($1, $2, $3)", note.Title, note.Content, note.Folder_id).Scan(&newId)
+	if err != nil {
+		return 0, err
+	}
+	return newId, nil
 }
 
 func (r *noteRepositories) DeleteNote(ctx context.Context, id_to_del int) error {
 	_, err := r.db.ExecContext(ctx, "SELECT delete_line_note($1)", id_to_del)
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (r *noteRepositories) FetchNote(ctx context.Context, start, end int, folder_id ...int) ([]models.Note, error) {
+func (r *noteRepositories) FetchNote(ctx context.Context, user_id, start, end int, folder_id ...int) ([]models.Note, error) {
 	var result []models.Note
 	var rows *sql.Rows
 	var err error
 
 	if len(folder_id) > 0 {
-		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_notes($1, $2, $3)", start, end, folder_id[0])
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_notes($1, $2, $3, $4)", user_id, start, end, folder_id[0])
 	} else {
-		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_notes($1, $2)", start, end)
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_notes($1, $2, $3)", user_id, start, end)
 	}
 
 	if err != nil {
@@ -63,4 +72,21 @@ func (r *noteRepositories) FetchNote(ctx context.Context, start, end int, folder
 	}
 
 	return result, nil
+}
+
+func (r *noteRepositories) GetUserByFinance(noteID int) (int, error) {
+	var userId int
+	err := r.db.QueryRow("SELECT get_user_by_note($1)", noteID).Scan(&userId)
+	if err != nil {
+		return 0, err
+	}
+	return userId, nil
+}
+
+func (r *noteRepositories) UpdateNote(ctx context.Context, note models.Note) error {
+	_, err := r.db.ExecContext(ctx, "SELECT update_note($1, $2, $3)", note.Id, note.Title, note.Content)
+	if err != nil {
+		return err
+	}
+	return nil
 }

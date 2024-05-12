@@ -20,10 +20,10 @@ curl -X POST http://localhost:8081/folder/create \
      -d '{"name":"testoncode2","type":"folder 2","image":"two","color":3,"user_id":2}'
 
 ###
-curl -X DELETE http://localhost:8081/folder/delete?to_del=11
+curl -X DELETE http://localhost:8081/folder/delete?to_del=2
 
 ###
-curl -X GET http://localhost:8081/folder/fetch?start=1&end=10&user=2
+curl -X GET http://localhost:8081/folder/fetch?user_id=1&start=1&end=10&user=1
 
 ###
 curl -X PUT http://localhost:8081/folder/update \
@@ -40,13 +40,13 @@ curl -X POST http://localhost:8081/note/create \
 curl -X DELETE http://localhost:8081/note/delete?to_del=2
 
 ###
-curl -X GET http://localhost:8081/note/fetch?start=1&end=7&folder_id=5
+curl -X GET http://localhost:8081/note/fetch?user_id=1&start=1&end=7&folder_id=1
 
 //-------------------------------------------------------------
 ###
 curl -X POST http://localhost:8081/finance/create \
      -H 'Content-Type: application/json' \
-     -d '{"price":-100,"currency":"RUB","folder_id":2,"date":"2024-03-27T00:00:00Z"}'
+     -d '{"price":1000,"currency":"RUB","folder_id":1,"date":"2024-04-15T00:00:00Z"}'
 
 
 ###
@@ -56,29 +56,29 @@ curl -X DELETE http://localhost:8081/finance/delete?to_del=4
 curl -X GET http://localhost:8081/finance/fetch?user_id=1&start=1&end=10
 
 ###
-curl -X GET http://localhost:8081/finance/fetch-income?user_id=1&start=1&end=10&yearMonth=2024-03
+curl -X GET http://localhost:8081/finance/fetch-income?user_id=2&start=1&end=10&yearMonth=2024-03
 
 ###
-curl -X GET http://localhost:8081/finance/fetch-expect?user_id=1&start=1&end=10&yearMonth=2024-03
+curl -X GET http://localhost:8081/finance/fetch-expense?user_id=2&start=1&end=10&yearMonth=2024-03
 
 //-------------------------------------------------------------
 ###
 curl -X POST http://localhost:8081/task/create \
      -H 'Content-Type: application/json' \
-     -d '{"text":"subsidiary",
-     "description":"subsidiary",
-     "is_completed":true,
-     "task_id":1,
-     "folder_id":1,
+     -d '{"text":"last test",
+     "description":"last test",
+     "is_completed":false,
+     "task_id":null,
+     "folder_id":3,
      "favourites":true,
-     "date":"2024-06-13T00:00:00Z"}'
+     "date":"2024-07-13T00:00:00Z"}'
 
 
 ###
 curl -X DELETE http://localhost:8081/task/delete?to_del=28
 
 ###
-curl -X GET http://localhost:8081/task/fetch?start=1&end=10
+curl -X GET http://localhost:8081/task/fetch?user_id=1&start=1&end=10&folder_id=1
 
 ###
 curl -X PUT http://localhost:8081/task/update \
@@ -86,10 +86,10 @@ curl -X PUT http://localhost:8081/task/update \
      -d '{"id":4,"text":"subsidiary","description":"subsidiary","date":"2024-07-29T00:00:00Z","is_completed":true, "favourites": false,"task_id":null,"folder_id":1}'
 
 ###
-curl -X GET http://localhost:8081/task/count
+curl -X GET http://localhost:8081/task/count?user_id=1
 
 ###
-curl -X GET http://localhost:8081/task/count/favourites
+curl -X GET http://localhost:8081/task/count/favourites?user_id=1
 
 ###
-curl -X GET http://localhost:8081/task/fetch-favourites?start=1&end=12&folder_id=1
+curl -X GET http://localhost:8081/task/fetch/favourites?user_id=1&start=1&end=12&folder_id=1

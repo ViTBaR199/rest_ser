@@ -53,6 +53,7 @@ func (h *NoteHandlers) DeleteNote(c *gin.Context) {
 }
 
 func (h *NoteHandlers) FetchNote(c *gin.Context) {
+	user_id := c.Query("user_id")
 	start := c.Query("start")
 	end := c.Query("end")
 	folder_id := c.Query("folder_id")
@@ -61,8 +62,13 @@ func (h *NoteHandlers) FetchNote(c *gin.Context) {
 		return
 	}
 
-	startINT, err := strconv.Atoi(start)
+	userINT, err := strconv.Atoi(user_id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id format"})
+		return
+	}
 
+	startINT, err := strconv.Atoi(start)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start format"})
 		return
@@ -83,11 +89,25 @@ func (h *NoteHandlers) FetchNote(c *gin.Context) {
 		folderINTs = append(folderINTs, folderINT)
 	}
 
-	rows, err := h.NoteService.FetchNote(startINT, endINT, folderINTs...)
+	rows, err := h.NoteService.FetchNote(userINT, startINT, endINT, folderINTs...)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, rows)
+}
+
+func (h *NoteHandlers) UpdateNote(c *gin.Context) {
+	var note models.Note
+	if err := c.ShouldBindJSON(&note); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.NoteService.UpdateNote(c, note); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Note update successfully"})
 }

@@ -10,13 +10,14 @@ import (
 )
 
 type TaskRepositories interface {
-	CreateTask(ctx context.Context, task models.Task) error
+	CreateTask(ctx context.Context, task models.Task) (int, error)
 	DeleteTask(ctx context.Context, id_to_del int) error
-	FetchTask(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error)
+	FetchTask(ctx context.Context, user_id, start, end int, folder_id ...int) ([]models.Task, error)
 	UpdateTask(ctx context.Context, task models.Task) error
-	CountTask(ctx context.Context) (int, error)
-	CountTaskFavourites(ctx context.Context) (int, error)
-	FetchTaskFavourites(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error)
+	CountTask(ctx context.Context, user_id int) (int, error)
+	CountTaskFavourites(ctx context.Context, user_id int) (int, error)
+	FetchTaskFavourites(ctx context.Context, user_id, start, end int, folder_id ...int) ([]models.Task, error)
+	GetUserByTask(taskID int) (int, error)
 }
 
 type taskRepositories struct {
@@ -27,7 +28,7 @@ func NewTaskRepositories(db *sql.DB) TaskRepositories {
 	return &taskRepositories{db: db}
 }
 
-func (r *taskRepositories) CreateTask(ctx context.Context, task models.Task) error {
+func (r *taskRepositories) CreateTask(ctx context.Context, task models.Task) (int, error) {
 	var err error
 	var taskID sql.NullInt64
 	if task.Task_id != nil {
@@ -35,17 +36,18 @@ func (r *taskRepositories) CreateTask(ctx context.Context, task models.Task) err
 		var parentIsChild bool
 		err = r.db.QueryRowContext(ctx, "SELECT checking_for_childishness($1)", task.Task_id).Scan(&parentIsChild)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		if parentIsChild {
-			return fmt.Errorf("cannot create a subtask for a task that is already a subtask")
+			return 0, fmt.Errorf("cannot create a subtask for a task that is already a subtask")
 		}
 	} else {
 		taskID = sql.NullInt64{Int64: 0, Valid: false}
 	}
-	_, err = r.db.ExecContext(ctx, "SELECT create_new_task($1, $2, $3, $4, $5, $6, $7)",
-		task.Text, task.Description, task.Is_completed, taskID, task.Folder_id, task.Favourites, task.Date)
-	return err
+	var newId int
+	err = r.db.QueryRowContext(ctx, "SELECT create_new_task($1, $2, $3, $4, $5, $6, $7)",
+		task.Text, task.Description, task.Is_completed, taskID, task.Folder_id, task.Favourites, task.Date).Scan(&newId)
+	return newId, nil
 }
 
 func (r *taskRepositories) DeleteTask(ctx context.Context, id_to_del int) error {
@@ -53,7 +55,7 @@ func (r *taskRepositories) DeleteTask(ctx context.Context, id_to_del int) error 
 	return err
 }
 
-func (r *taskRepositories) FetchTask(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error) {
+func (r *taskRepositories) FetchTask(ctx context.Context, user_id, start, end int, folder_id ...int) ([]models.Task, error) {
 	taskMap := make(map[int]*models.Task)
 	allTasks := []models.Task{} // Список для задач без task_id
 
@@ -62,11 +64,11 @@ func (r *taskRepositories) FetchTask(ctx context.Context, start, end int, folder
 
 	// Выбор запроса в зависимости от наличия folder_id
 	if start == 0 && end == 0 {
-		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task()")
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1)", user_id)
 	} else if len(folder_id) > 0 {
-		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1, $2, $3)", start, end, folder_id[0])
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1, $2, $3, $4)", user_id, start, end, folder_id[0])
 	} else {
-		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1, $2)", start, end)
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task($1, $2, $3)", user_id, start, end)
 	}
 
 	if err != nil {
@@ -141,8 +143,8 @@ func (r *taskRepositories) UpdateTask(ctx context.Context, task models.Task) err
 	return err
 }
 
-func (r *taskRepositories) CountTask(ctx context.Context) (int, error) {
-	rows, err := r.db.QueryContext(ctx, "SELECT * FROM count_task()")
+func (r *taskRepositories) CountTask(ctx context.Context, user_id int) (int, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT * FROM count_task($1)", user_id)
 	if err != nil {
 		return 0, fmt.Errorf("querying count_task: %v", err)
 	}
@@ -167,8 +169,8 @@ func (r *taskRepositories) CountTask(ctx context.Context) (int, error) {
 	}
 }
 
-func (r *taskRepositories) CountTaskFavourites(ctx context.Context) (int, error) {
-	rows, err := r.db.QueryContext(ctx, "SELECT * FROM count_task_favourites()")
+func (r *taskRepositories) CountTaskFavourites(ctx context.Context, user_id int) (int, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT * FROM count_task_favourites($1)", user_id)
 	if err != nil {
 		return 0, fmt.Errorf("querying count_task_favourites: %v", err)
 	}
@@ -193,7 +195,7 @@ func (r *taskRepositories) CountTaskFavourites(ctx context.Context) (int, error)
 	}
 }
 
-func (r *taskRepositories) FetchTaskFavourites(ctx context.Context, start, end int, folder_id ...int) ([]models.Task, error) {
+func (r *taskRepositories) FetchTaskFavourites(ctx context.Context, user_id, start, end int, folder_id ...int) ([]models.Task, error) {
 	taskMap := make(map[int]*models.Task)
 	allTasks := []models.Task{} // Список для задач без task_id
 
@@ -202,9 +204,9 @@ func (r *taskRepositories) FetchTaskFavourites(ctx context.Context, start, end i
 
 	// Выбор запроса в зависимости от наличия folder_id
 	if len(folder_id) > 0 {
-		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task_favourites($1, $2, $3)", start, end, folder_id[0])
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task_favourites($1, $2, $3, $4)", user_id, start, end, folder_id[0])
 	} else {
-		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task_favourites($1, $2)", start, end)
+		rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_task_favourites($1, $2, $3)", user_id, start, end)
 	}
 
 	if err != nil {
@@ -254,4 +256,13 @@ func (r *taskRepositories) FetchTaskFavourites(ctx context.Context, start, end i
 	}
 
 	return result, nil
+}
+
+func (r *taskRepositories) GetUserByTask(taskID int) (int, error) {
+	var userId int
+	err := r.db.QueryRow("SELECT get_user_by_task($1)", taskID).Scan(&userId)
+	if err != nil {
+		return 0, err
+	}
+	return userId, nil
 }
