@@ -94,6 +94,10 @@ func (h *TaskHandler) FetchTask(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	if rows == nil {
+		c.JSON(http.StatusOK, []models.Task{})
+		return
+	}
 
 	c.JSON(http.StatusOK, rows)
 }
@@ -185,6 +189,10 @@ func (h *TaskHandler) FetchTaskFavourites(c *gin.Context) {
 	rows, err := h.TaskService.FetchTaskFavourites(userINT, startINT, endINT, folderINTs...)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if rows == nil {
+		c.JSON(http.StatusNotFound, []models.Task{})
 		return
 	}
 

@@ -75,6 +75,10 @@ func (h *FinanceHandler) FetchFinance(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	if rows == nil {
+		c.JSON(http.StatusOK, []models.Finance{})
+		return
+	}
 
 	c.JSON(http.StatusOK, rows)
 }
@@ -102,6 +106,10 @@ func (h *FinanceHandler) FetchFinanceIncome(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	if rows == nil {
+		c.JSON(http.StatusOK, []models.Finance{})
+		return
+	}
 
 	c.JSON(http.StatusOK, rows)
 }
@@ -127,6 +135,10 @@ func (h *FinanceHandler) FetchFinanceExpense(c *gin.Context) {
 	rows, err := h.FinanceService.FetchFinanceExpense(userINT, startINT, endINT, yearMonth)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if rows == nil {
+		c.JSON(http.StatusOK, []models.Finance{})
 		return
 	}
 

@@ -98,7 +98,7 @@ func (h *FolderHandler) FetchFolder(c *gin.Context) {
 	}
 
 	if rows == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "no information was found about such a user or category"})
+		c.JSON(http.StatusOK, []models.Folder{})
 		return
 	}
 
