@@ -15,6 +15,7 @@ type FolderRepositories interface {
 	FetchFolder(ctx context.Context, start, end int, id_user int, type_folder string) ([]models.Folder, error)
 	UpdateFolder(ctx context.Context, folder models.Folder) error
 	GetUserByFolder(folderID int) (int, error)
+	FetchFolderById(ctx context.Context, id_folder, user_id int) ([]models.Folder, error)
 }
 
 type folderRepositories struct {
@@ -55,7 +56,7 @@ func (r *folderRepositories) FetchFolder(ctx context.Context, start, end int, id
 		var f models.Folder
 		var color sql.NullInt64
 
-		if err := rows.Scan(&f.ID, &f.Name, &f.Type, &f.Image, &color, &f.Folder_count); err != nil {
+		if err := rows.Scan(&f.ID, &f.Name, &f.Type, &f.Image, &color, &f.Folder_count, &f.User_id); err != nil {
 			return nil, fmt.Errorf("scanning row: %v", err)
 		}
 
@@ -104,4 +105,39 @@ func (r *folderRepositories) GetUserByFolder(folderID int) (int, error) {
 		return 0, err
 	}
 	return userId, nil
+}
+
+func (r *folderRepositories) FetchFolderById(ctx context.Context, id_folder, user_id int) ([]models.Folder, error) {
+	var folders []models.Folder
+	var rows *sql.Rows
+	var err error
+	rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_folder_by_id($1, $2)", id_folder, user_id)
+	if err != nil {
+		return nil, fmt.Errorf("querying fetch_task: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var f models.Folder
+		var color sql.NullInt64
+
+		if err := rows.Scan(&f.ID, &f.Name, &f.Type, &f.Image, &color, &f.Folder_count, &f.User_id); err != nil {
+			return nil, fmt.Errorf("scanning row: %v", err)
+		}
+
+		if color.Valid {
+			tempColor := int(color.Int64)
+			f.Color = &tempColor
+		} else {
+			f.Color = nil
+		}
+
+		folders = append(folders, f)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating rows: %v", err)
+	}
+
+	return folders, nil
 }

@@ -116,3 +116,20 @@ func (s *FolderService) UpdateFolder(ctx context.Context, folder models.Folder) 
 	s.InvalidataUserCache(*folder.User_id)
 	return nil
 }
+
+func (s *FolderService) FetchFolderById(id_folder, user_id int) ([]models.Folder, error) {
+	key := fmt.Sprintf("folder-%d-%d", user_id, id_folder)
+
+	if cachedData, found := s.cache.Get(key); found {
+		return cachedData.([]models.Folder), nil
+	}
+
+	data, err := s.repo.FetchFolderById(context.Background(), id_folder, user_id)
+	if err != nil {
+		return nil, err
+	}
+
+	s.cache.Set(key, data, cache.DefaultExpiration)
+	s.AddCacheKeyForUser(user_id, key)
+	return data, nil
+}

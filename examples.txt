@@ -23,7 +23,10 @@ curl -X POST http://localhost:8081/folder/create \
 curl -X DELETE http://localhost:8081/folder/delete?to_del=2
 
 ###
-curl -X GET http://localhost:8081/folder/fetch?user_id=1&start=1&end=10&user=1
+curl -X GET http://localhost:8081/folder/fetch?user=1&start=1&end=10&folder_type=test
+
+###
+curl -X GET http://localhost:8081/folder//folder/fetch-by-id?user_id=1&folder_id=1
 
 ###
 curl -X PUT http://localhost:8081/folder/update \
@@ -53,13 +56,13 @@ curl -X POST http://localhost:8081/finance/create \
 curl -X DELETE http://localhost:8081/finance/delete?to_del=4
 
 ###
-curl -X GET http://localhost:8081/finance/fetch?user_id=1&start=1&end=10
+curl -X GET http://localhost:8081/finance/fetch?user_id=3&start=1&end=10
 
 ###
-curl -X GET http://localhost:8081/finance/fetch-income?user_id=2&start=1&end=10&yearMonth=2024-03
+curl -X GET http://localhost:8081/finance/fetch-income?user_id=3&start=1&end=10&yearMonth=2024-03
 
 ###
-curl -X GET http://localhost:8081/finance/fetch-expense?user_id=2&start=1&end=10&yearMonth=2024-03
+curl -X GET http://localhost:8081/finance/fetch-expense?user_id=3&start=1&end=10&yearMonth=2024-03
 
 //-------------------------------------------------------------
 ###

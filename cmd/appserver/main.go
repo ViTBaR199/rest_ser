@@ -58,6 +58,8 @@ func main() {
 
 	router.PUT("/folder/update", folderHandler.UpdateFolder)
 
+	router.GET("/folder/fetch-by-id", folderHandler.FetchFolderById)
+
 	//---------------------------------------------------------
 	router.POST("/note/create", noteHandler.CreateNote)
 

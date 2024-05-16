@@ -119,3 +119,39 @@ func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Folder updated successfully"})
 }
+
+func (h *FolderHandler) FetchFolderById(c *gin.Context) {
+	folder := c.Query("folder_id")
+	user := c.Query("user_id")
+
+	if folder == "" || user == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "both start and end parameters are required"})
+		return
+	}
+
+	folderINT, err := strconv.Atoi(folder)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start format"})
+		return
+	}
+
+	userINT, err := strconv.Atoi(user)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end format"})
+		return
+	}
+
+	rows, err := h.FolderService.FetchFolderById(folderINT, userINT)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if rows == nil {
+		c.JSON(http.StatusOK, []models.Folder{})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
+}
