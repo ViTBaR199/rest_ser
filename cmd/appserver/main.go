@@ -56,7 +56,7 @@ func main() {
 
 	router.GET("/folder/fetch", folderHandler.FetchFolder)
 
-	router.PUT("/folder/update", folderHandler.UpdateFolder)
+	router.PATCH("/folder/update", folderHandler.UpdateFolder)
 
 	router.GET("/folder/fetch-by-id", folderHandler.FetchFolderById)
 
@@ -66,6 +66,8 @@ func main() {
 	router.DELETE("/note/delete", noteHandler.DeleteNote)
 
 	router.GET("/note/fetch", noteHandler.FetchNote)
+
+	router.PATCH("/note/update", noteHandler.UpdateNote)
 
 	//---------------------------------------------------------
 	router.POST("/finance/create", financeHandler.CreateFinance)
@@ -85,7 +87,7 @@ func main() {
 
 	router.GET("/task/fetch", taskHandler.FetchTask)
 
-	router.PUT("/task/update", taskHandler.UpdateTask)
+	router.PATCH("/task/update", taskHandler.UpdateTask)
 
 	router.GET("/task/count", taskHandler.CountTask)
 

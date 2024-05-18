@@ -17,7 +17,7 @@ curl -X GET http://localhost:8081/
 ###
 curl -X POST http://localhost:8081/folder/create \
      -H 'Content-Type: application/json' \
-     -d '{"name":"testoncode2","type":"folder 2","image":"two","color":3,"user_id":2}'
+     -d '{"name":"test folder","type":"learning","image":"red","color":4,"user_id":1}'
 
 ###
 curl -X DELETE http://localhost:8081/folder/delete?to_del=2
@@ -26,7 +26,7 @@ curl -X DELETE http://localhost:8081/folder/delete?to_del=2
 curl -X GET http://localhost:8081/folder/fetch?user=1&start=1&end=10&folder_type=test
 
 ###
-curl -X GET http://localhost:8081/folder//folder/fetch-by-id?user_id=1&folder_id=1
+curl -X GET http://localhost:8081/folder/fetch-by-id?folder_id=4&user_id=2
 
 ###
 curl -X PUT http://localhost:8081/folder/update \
@@ -44,6 +44,11 @@ curl -X DELETE http://localhost:8081/note/delete?to_del=2
 
 ###
 curl -X GET http://localhost:8081/note/fetch?user_id=1&start=1&end=7&folder_id=1
+
+###
+curl -X POST http://localhost:8081/note/update \
+     -H 'Content-Type: application/json' \
+     -d '{"title":"testoncode","content":"test for delete","folder_id":1}'
 
 //-------------------------------------------------------------
 ###
