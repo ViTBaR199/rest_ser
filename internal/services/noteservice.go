@@ -61,7 +61,7 @@ func (s *NoteService) CreateNote(ctx context.Context, note models.Note) error {
 		return err
 	}
 
-	userID, err := s.repo.GetUserByFinance(noteId)
+	userID, err := s.repo.GetUserByNote(noteId)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (s *NoteService) CreateNote(ctx context.Context, note models.Note) error {
 }
 
 func (s *NoteService) DeleteNote(id_to_del int) error {
-	userID, err := s.repo.GetUserByFinance(id_to_del)
+	userID, err := s.repo.GetUserByNote(id_to_del)
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (s *NoteService) FetchNote(user_id, start, end int, folder_id ...int) ([]mo
 }
 
 func (s *NoteService) UpdateNote(ctx context.Context, note models.Note) error {
-	userId, err := s.repo.GetUserByFinance(note.Id)
+	userId, err := s.repo.GetUserByNote(note.Id)
 	if err != nil {
 		return err
 	}
@@ -119,4 +119,26 @@ func (s *NoteService) UpdateNote(ctx context.Context, note models.Note) error {
 
 	s.InvalidataUserCache(userId)
 	return nil
+}
+
+func (s *NoteService) FetchNoteById(note_id int) (models.Note, error) {
+	user_id, err := s.repo.GetUserByNote(note_id)
+	if err != nil {
+		return models.Note{}, err
+	}
+
+	key := fmt.Sprintf("note-%d-%d", user_id, note_id)
+
+	if cachedData, found := s.cache.Get(key); found {
+		return cachedData.(models.Note), nil
+	}
+
+	data, err := s.repo.FetchNoteById(context.Background(), note_id)
+	if err != nil {
+		return models.Note{}, err
+	}
+
+	s.cache.Set(key, data, cache.DefaultExpiration)
+	s.AddCacheKeyForUser(user_id, key)
+	return data, nil
 }

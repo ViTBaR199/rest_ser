@@ -116,3 +116,32 @@ func (h *NoteHandlers) UpdateNote(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Note update successfully"})
 }
+
+func (h *NoteHandlers) FetchNoteById(c *gin.Context) {
+	note := c.Query("note_id")
+
+	if note == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "both start and end parameters are required"})
+		return
+	}
+
+	noteINT, err := strconv.Atoi(note)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start format"})
+		return
+	}
+
+	rows, err := h.NoteService.FetchNoteById(noteINT)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if rows == (models.Note{}) {
+		c.JSON(http.StatusOK, models.Folder{})
+		return
+	}
+
+	c.JSON(http.StatusOK, rows)
+}

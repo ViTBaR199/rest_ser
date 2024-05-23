@@ -14,7 +14,8 @@ type NoteRepositories interface {
 	DeleteNote(ctx context.Context, id_to_del int) error
 	FetchNote(ctx context.Context, user_id, start, end int, folder_id ...int) ([]models.Note, error)
 	UpdateNote(ctx context.Context, note models.Note) error
-	GetUserByFinance(noteID int) (int, error)
+	GetUserByNote(noteID int) (int, error)
+	FetchNoteById(ctx context.Context, noteId int) (models.Note, error)
 }
 
 type noteRepositories struct {
@@ -74,7 +75,7 @@ func (r *noteRepositories) FetchNote(ctx context.Context, user_id, start, end in
 	return result, nil
 }
 
-func (r *noteRepositories) GetUserByFinance(noteID int) (int, error) {
+func (r *noteRepositories) GetUserByNote(noteID int) (int, error) {
 	var userId int
 	err := r.db.QueryRow("SELECT get_user_by_note($1)", noteID).Scan(&userId)
 	if err != nil {
@@ -89,4 +90,28 @@ func (r *noteRepositories) UpdateNote(ctx context.Context, note models.Note) err
 		return err
 	}
 	return nil
+}
+
+func (r *noteRepositories) FetchNoteById(ctx context.Context, noteId int) (models.Note, error) {
+	var result models.Note
+	var rows *sql.Rows
+	var err error
+
+	rows, err = r.db.QueryContext(ctx, "SELECT * FROM fetch_note_by_id($1)", noteId)
+	if err != nil {
+		return models.Note{}, fmt.Errorf("querying fetch_note: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var n models.Note
+
+		if err := rows.Scan(&n.Id, &n.Title, &n.Content, &n.Folder_id); err != nil {
+			return models.Note{}, fmt.Errorf("scanning row: %v", err)
+		}
+
+		result = n
+	}
+
+	return result, nil
 }
