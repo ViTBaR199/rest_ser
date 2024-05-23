@@ -26,6 +26,7 @@ func (h *NoteHandlers) CreateNote(c *gin.Context) {
 
 	if err := h.NoteService.CreateNote(c, note); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Note created successfully"})

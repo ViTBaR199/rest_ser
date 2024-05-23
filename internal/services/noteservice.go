@@ -45,7 +45,7 @@ func (s *NoteService) InvalidataUserCache(user_id int) {
 }
 
 func validateNoteData(note models.Note) error {
-	if note.Title == "" || note.Content == "" {
+	if note.Title == "" {
 		return errors.New("title and content must be provided")
 	}
 	return nil

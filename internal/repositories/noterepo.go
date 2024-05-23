@@ -27,7 +27,7 @@ func NewNoteRepositories(db *sql.DB) NoteRepositories {
 
 func (r *noteRepositories) CreateNote(ctx context.Context, note models.Note) (int, error) {
 	var newId int
-	err := r.db.QueryRowContext(ctx, "SELECT FROM create_new_note($1, $2, $3)", note.Title, note.Content, note.Folder_id).Scan(&newId)
+	err := r.db.QueryRowContext(ctx, "SELECT create_new_note($1, $2, $3)", note.Title, note.Content, note.Folder_id).Scan(&newId)
 	if err != nil {
 		return 0, err
 	}
